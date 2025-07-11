@@ -1,0 +1,20 @@
+.adblast-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 48px;
+  margin-right: 1.2rem;
+  animation: logoFadeIn 1.2s cubic-bezier(.4,2,.6,1);
+}
+.adblast-logo svg {
+  display: block;
+  filter: drop-shadow(0 2px 12px #00bcd4aa);
+  transition: filter 0.25s;
+}
+.adblast-logo:hover svg {
+  filter: drop-shadow(0 4px 24px #00bcd4cc);
+}
+@keyframes logoFadeIn {
+  from { opacity: 0; transform: translateY(-16px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}

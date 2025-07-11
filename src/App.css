@@ -1,0 +1,303 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+/* Miami-inspired, professional, vibrant styles */
+body {
+  background: url('https://images.coolwallpapers.me/picsup/6008546-miami-lights-florida-miami-florida-night-panorama-vice-city.jpg') no-repeat center center fixed;
+  background-size: cover;
+  image-rendering: auto;
+  min-height: 100vh;
+  margin: 0;
+  font-family: 'Montserrat', 'Segoe UI', Arial, sans-serif;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.18); /* even lighter overlay */
+  backdrop-filter: blur(0.5px); /* almost no blur for max sharpness */
+  z-index: 0;
+}
+
+#root {
+  position: relative;
+  z-index: 1;
+}
+
+.main-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  height: 64px;
+  background: none;
+  box-shadow: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+.menu-bar {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 48px;
+  width: 48px;
+  cursor: pointer;
+  z-index: 202;
+  background: rgba(0,0,0,0.18);
+  border-radius: 8px;
+  transition: background 0.2s;
+  min-width: 48px;
+  min-height: 48px;
+  order: 1;
+  margin-left: 0;
+}
+.menu-bar:hover {
+  background: rgba(0,0,0,0.28);
+}
+.bar {
+  width: 32px;
+  height: 4px;
+  background: #fff;
+  margin: 4px 0;
+  border-radius: 2px;
+  opacity: 0.85;
+  transition: 0.3s;
+}
+
+.adblast-logo {
+  order: 2;
+  margin-right: 0;
+}
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 320px;
+  height: 100vh;
+  background: rgba(18, 22, 34, 0.98);
+  box-shadow: 4px 0 32px rgba(0,0,0,0.18);
+  z-index: 201;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 2.5rem 2rem 2rem 2rem;
+  transform: translateX(-100%);
+  opacity: 0;
+  will-change: transform, opacity;
+  transition: transform 0.12s cubic-bezier(.4,2,.6,1), opacity 0.12s cubic-bezier(.4,2,.6,1);
+  background: linear-gradient(120deg, rgba(18,22,34,0.98) 80%, #ff008033 100%);
+}
+.sidebar.open {
+  transform: translateX(0);
+  opacity: 1;
+}
+.close-btn {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 2.2rem;
+  font-weight: bold;
+  align-self: flex-end;
+  margin-bottom: 2rem;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.close-btn:hover {
+  color: #ff0080;
+}
+.sidebar-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}
+.sidebar-list li {
+  margin: 1.2rem 0;
+}
+.sidebar-list a {
+  color: #fff;
+  font-size: 1.3rem;
+  font-weight: 600;
+  text-decoration: none;
+  letter-spacing: 1px;
+  display: block;
+  padding: 0.5rem 0.5rem 0.5rem 0;
+  border-radius: 6px;
+  transition: background 0.2s, color 0.2s;
+}
+.sidebar-list a:hover {
+  background: linear-gradient(90deg, #00bcd4 0%, #ff0080 100%);
+  color: #fff200;
+}
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.35);
+  z-index: 200;
+  animation: fadeIn 0.12s;
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.page-content {
+  background: none;
+  border-radius: 18px;
+  max-width: 900px;
+  margin: 96px auto 0 auto;
+  padding: 2.5rem 2rem;
+  box-shadow: none;
+  /* Miami animated blue border */
+  border: 3px solid transparent;
+  background-image: linear-gradient(rgba(18,22,34,0.65),rgba(18,22,34,0.65)),
+    linear-gradient(90deg, #00bcd4, #2196f3, #00eaff, #00bcd4);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  animation: borderMove 6s linear infinite;
+}
+@keyframes borderMove {
+  0% { background-position: 0 0, 0 0; }
+  100% { background-position: 300% 0, 0 0; }
+}
+
+h1 {
+  color: #ff0080;
+  font-size: 3.2rem;
+  margin-bottom: 1rem;
+  font-family: 'Montserrat', 'Segoe UI', Arial, sans-serif;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-shadow: 0 4px 24px rgba(0,0,0,0.45);
+}
+p, .subtitle {
+  color: #fff;
+  font-size: 1.3rem;
+  font-weight: 700;
+  text-shadow: 0 2px 16px rgba(0,0,0,0.38);
+}
+
+.miami-gradient {
+  background: linear-gradient(90deg, #00bcd4 0%, #ff0080 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 900;
+  font-size: 3.5rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-shadow: 0 6px 32px rgba(0,0,0,0.55);
+}
+
+@media (max-width: 700px) {
+  #root {
+    padding: 1rem;
+  }
+  .page-content {
+    padding: 1.2rem 0.5rem;
+    margin: 80px auto 0 auto;
+  }
+  .home-hero {
+    padding: 2rem 0.5rem 1.5rem 0.5rem;
+    border-radius: 12px;
+  }
+  .miami-gradient {
+    font-size: 2.1rem;
+    letter-spacing: 1px;
+  }
+  .services-grid {
+    grid-template-columns: 1fr;
+    gap: 1.2rem;
+    padding: 0 0.2rem;
+  }
+  .service-card {
+    padding: 1.2rem 0.5rem 1rem 0.5rem;
+    border-radius: 12px;
+  }
+  .service-img {
+    max-width: 100%;
+    border-radius: 8px;
+  }
+  .service-name {
+    font-size: 1.1rem;
+  }
+  .service-desc {
+    font-size: 1rem;
+  }
+  .service-price {
+    font-size: 1.05rem;
+  }
+  .main-nav {
+    height: 56px;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  .menu-bar {
+    height: 40px;
+    width: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    margin-left: 0;
+  }
+  .sidebar {
+    width: 90vw;
+    min-width: 0;
+    padding: 1.2rem 0.5rem 1.2rem 0.7rem;
+    border-radius: 0 12px 12px 0;
+    box-shadow: 8px 0 40px 8px #ff008055, 4px 0 32px rgba(0,0,0,0.18);
+  }
+}
