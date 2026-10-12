@@ -5,14 +5,15 @@
 - [x] Trend research and top-20 product list (`research/etsy-trends.md`)
 - [x] Fees and break-even (`research/etsy-economics.md`)
 - [x] Budget and approval rules (`BUDGET.md`)
-- [ ] **Owner:** pick the shop name and confirm the two-lane niche
+- [x] Shop name **PalmPop Studio** and the two-lane niche confirmed
 - [ ] **Owner:** read Etsy's Creativity Standards / AI disclosure rules
 
-## Phase 2 — Build the agent team (weeks 1–2, $0 spend)
-- Hermes orchestrator plus specialists (trend scout, designer, listing writer, analyst) using the Claude Agent SDK, scheduled daily by GitHub Actions
-- Each agent has its own `memory.md` playbook
-- Approval issues, the spend-cap check, the kill switch and daily reports
-- Dry run: produce the first 25 products and listing drafts **without publishing**
+## Phase 2 — Build the agent team (built; waiting on API key)
+- [x] Hermes orchestrator plus specialists (trend scout, designer, listing writer, analyst) on the Claude API, scheduled daily by GitHub Actions
+- [x] Each agent has its own `memory.md` playbook
+- [x] Approval issues, the spend-cap check, the kill switch and daily reports
+- [x] Dry run tested end to end (canned answers, $0)
+- [ ] Etsy API publishing (needs the shop first; until then approved batches are packaged for a 5-minute manual upload)
 - **Owner provides:** an Anthropic API key (with a spend limit) as a repo secret
 
 ## Phase 3 — Launch (weeks 2–4, about $5–15)

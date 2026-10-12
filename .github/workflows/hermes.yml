@@ -1,0 +1,87 @@
+name: Hermes (PalmPop Studio agents)
+
+on:
+  schedule:
+    - cron: "17 13 * * *" # daily, ~9:17am Miami time
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run: canned answers, no AI spend, results uploaded as an artifact"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency: hermes
+
+jobs:
+  hermes:
+    # Kill switch: set the repo variable HERMES_ENABLED to "false" to stop all runs.
+    if: vars.HERMES_ENABLED != 'false'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: ai-ops
+    env:
+      GH_TOKEN: ${{ github.token }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      HERMES_DRY_RUN: ${{ (github.event_name == 'workflow_dispatch' && inputs.dry_run) && '1' || '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: ai-ops/package-lock.json
+      - run: npm ci
+      - run: npm test
+
+      - name: Make sure the approval labels exist
+        run: |
+          gh label create hermes-approval --color 1D76DB --description "Hermes wants your OK" --force
+          gh label create approved --color 0E8A16 --description "Owner approved" --force
+          gh label create rejected --color B60205 --description "Owner rejected" --force
+
+      - name: Read the owner's decisions
+        run: |
+          mkdir -p data/inbox
+          gh issue list --label hermes-approval --state open --limit 100 --json number,title,labels \
+            | node src/github.ts > data/inbox/decisions.json
+
+      - name: Run Hermes
+        run: node src/hermes.ts
+
+      - name: Open approval issues and close decided ones
+        if: env.HERMES_DRY_RUN != '1' && env.ANTHROPIC_API_KEY != ''
+        run: |
+          shopt -s nullglob
+          for f in data/outbox/issues/*.md; do
+            gh issue create --title "$(head -n 1 "$f")" --body "$(tail -n +3 "$f")" --label hermes-approval
+            rm "$f"
+          done
+          if [ -f data/outbox/close-issues.json ]; then
+            for n in $(node -e 'console.log(JSON.parse(require("fs").readFileSync("data/outbox/close-issues.json","utf8")).join(" "))'); do
+              gh issue close "$n" --comment "Hermes processed this decision. See today's report in ai-ops/data/reports/."
+            done
+            rm data/outbox/close-issues.json
+          fi
+
+      - name: Save the agents' work
+        if: env.HERMES_DRY_RUN != '1' && env.ANTHROPIC_API_KEY != ''
+        run: |
+          rm -f data/inbox/decisions.json
+          git config user.name "hermes-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data agents
+          git diff --cached --quiet || git commit -m "Hermes daily run $(date -u +%F)"
+          git push
+
+      - name: Upload dry-run output
+        if: env.HERMES_DRY_RUN == '1' || env.ANTHROPIC_API_KEY == ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: hermes-dry-run
+          path: ai-ops/.dry-run/

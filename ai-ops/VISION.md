@@ -11,7 +11,7 @@ Build an Etsy shop of original digital downloads that a team of AI agents runs, 
 
 ## Store concept: two lanes in one shop
 
-> **Owner decision needed:** confirm the niche before the agents start. The lanes below are my recommendation.
+Owner confirmed (Oct 12, 2026): go with both lanes below.
 
 **Lane A — Evergreen and higher priced: "small-business marketing kits"**
 Editable flyer, postcard, door-hanger, social-post and price-list templates for local service businesses: realtors, cleaners, landscapers, pool, HVAC, salons and food trucks.
@@ -24,7 +24,7 @@ Products follow the calendar and rising trends, such as holiday party games, wal
 - Volume comes from timing. Holiday searches build 4–8 weeks ahead, so **Q4 2026 products must go live in October/November.**
 
 ## Brand
-- Working name: *to be chosen by the owner* (ideas: "Blast Templates", "Miami Made Prints", "Door-to-Door Design Co.")
+- Name: **PalmPop Studio** (Etsy shop name: `PalmPopStudio`). Short, alliterative, and Miami-bright. It fits both party printables and business templates. No existing Etsy shop with that name turned up in a web search, but Etsy's sign-up will confirm.
 - Look: bold, clean and Miami-bright, matching AdBlast. It should feel professional rather than generic AI.
 
 ## Price ladder
