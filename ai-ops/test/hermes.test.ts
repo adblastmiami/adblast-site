@@ -109,3 +109,30 @@ test("labeled approval issues become decisions; rejection wins", async () => {
     { batchId: "2026-10-12-2", issue: 2, decision: "rejected" },
   ]);
 });
+
+test("dry run writes the dashboard feed, and the dashboard build never copies PDFs", async () => {
+  const dir = tmp();
+  await runHermes({ cfg: { ...cfg, productsPerRun: 5, batchSize: 5 }, dir, dryRun: true, now });
+  const d = JSON.parse(readFileSync(path.join(dir, "dashboard.json"), "utf8"));
+  assert.deepEqual(d.agents.map((a: { callsign: string }) => a.callsign), ["HERMES", "NOVA", "PRISM", "QUILL", "LEDGER"]);
+  assert.equal(d.mode, "DRY RUN");
+  assert.equal(d.money.totalCap, cfg.monthlyCapUsd);
+  assert.equal(d.products.length, 5);
+  assert.equal(d.approvals.length, 1);
+  assert.equal(d.etsy.connected, false);
+
+  const { execFileSync } = await import("node:child_process");
+  const collect = path.join(import.meta.dirname, "..", "dashboard", "scripts", "collect.mjs");
+  // Point the collector at this temp run by copying the script next to a fake ops root.
+  const fakeOps = tmp();
+  const { cpSync, mkdirSync } = await import("node:fs");
+  cpSync(dir, path.join(fakeOps, "data"), { recursive: true });
+  mkdirSync(path.join(fakeOps, "dashboard", "scripts"), { recursive: true });
+  cpSync(collect, path.join(fakeOps, "dashboard", "scripts", "collect.mjs"));
+  execFileSync("node", [path.join(fakeOps, "dashboard", "scripts", "collect.mjs")]);
+
+  const published = path.join(fakeOps, "dashboard", "public", "data");
+  const files = readdirSync(published, { recursive: true }).map(String);
+  assert.ok(files.includes("dashboard.json"));
+  assert.equal(files.filter((f) => f.endsWith(".pdf")).length, 0);
+});

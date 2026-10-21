@@ -8,11 +8,13 @@
  *   6. weekly: the analyst reviews shop stats
  *   7. save what every agent learned, and write the daily report
  */
+import { execFileSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { Budget, BudgetError } from "./budget.ts";
 import { dataDir, isDryRun, loadConfig, type Config } from "./config.ts";
+import { buildDashboard } from "./dashboard.ts";
 import { LLM } from "./llm.ts";
 import { addLessons } from "./memory.ts";
 import {
@@ -59,12 +61,15 @@ export async function runHermes(opts: { cfg?: Config; dir?: string; dryRun?: boo
   const p: Pipeline = loadPipeline(dir);
   const lessons: Record<string, string[]> = {};
   const learn = (agent: string, l: string[]) => (lessons[agent] ??= []).push(...l);
+  // Latest thing each agent did this run, shown on the dashboard.
+  const tasks: Record<string, string> = {};
 
   // 1. Owner decisions (written by the GitHub workflow from labeled issues).
   const inbox = path.join(dir, "inbox", "decisions.json");
   const applied = applyDecisions(p, readJson<Decision[]>(inbox, []));
   rmSync(inbox, { force: true });
   for (const d of applied) log.push(`Owner ${d.decision} batch ${d.batchId} (issue #${d.issue}).`);
+  if (applied.length) tasks.hermes = `Processed ${applied.length} owner decision(s)`;
   writeJson(path.join(dir, "outbox", "close-issues.json"), applied.map((d) => d.issue));
 
   // 2. Approved batches → upload package (Etsy API publishing comes once the shop exists).
@@ -76,6 +81,7 @@ export async function runHermes(opts: { cfg?: Config; dir?: string; dryRun?: boo
     }
     packageBatch(dir, p, batch);
     batch.status = "ready_to_upload";
+    tasks.hermes = `Packaged batch ${batch.id} for upload`;
     log.push(`Batch ${batch.id} packaged in data/ready-to-upload/${batch.id}/ (${batch.productIds.length} listings, $${batch.listingFeesUsd.toFixed(2)} in Etsy fees when uploaded).`);
   }
 
@@ -91,6 +97,7 @@ export async function runHermes(opts: { cfg?: Config; dir?: string; dryRun?: boo
       p.lastTrendScout = today;
       learn(scout.NAME, report.lessons);
       log.push(`Trend scout added ${fresh.length} ideas (backlog: ${p.backlog.length}).`);
+      tasks[scout.NAME] = `Scanned trends: +${fresh.length} ideas`;
     }
 
     // 4. Make the best ideas into products.
@@ -105,10 +112,13 @@ export async function runHermes(opts: { cfg?: Config; dir?: string; dryRun?: boo
       const out = path.join(dir, "products", id);
       mkdirSync(out, { recursive: true });
       writeFileSync(path.join(out, "product.pdf"), await renderPdf(spec, cfg.shopName));
+      makeThumb(out);
       writeJson(path.join(out, "spec.json"), { idea, ...spec, lessons: undefined });
       writeJson(path.join(out, "listing.json"), { ...listing, lessons: undefined });
       p.products.push({ id, name: idea.name, lane: idea.lane, title: listing.title, priceUsd: listing.priceUsd, created: today, batchId: null });
       log.push(`Made "${idea.name}" ($${listing.priceUsd}, ${spec.pages.length} pages).`);
+      tasks[designer.NAME] = `Designed "${idea.name}"`;
+      tasks[writer.NAME] = `Wrote listing: ${listing.title.slice(0, 60)}`;
     }
 
     // 6. Analyst: weekly, once there is something live to judge.
@@ -119,6 +129,7 @@ export async function runHermes(opts: { cfg?: Config; dir?: string; dryRun?: boo
       p.lastAnalysis = today;
       writeJson(path.join(dir, "analysis", `${today}.json`), a);
       log.push(`Analyst: ${a.summary}`);
+      tasks[analyst.NAME] = `Reviewed ${stats.length} live listings`;
     }
   } catch (e) {
     if (e instanceof BudgetError) log.push(`Stopped early: ${e.message}`);
@@ -130,6 +141,7 @@ export async function runHermes(opts: { cfg?: Config; dir?: string; dryRun?: boo
   while ((batch = makeBatch(p, cfg, today))) {
     writeText(path.join(dir, "outbox", "issues", `${batch.id}.md`), approvalIssue(cfg, p, batch));
     log.push(`Batch ${batch.id} sent to the owner for approval.`);
+    tasks.hermes = `Requested approval for batch ${batch.id}`;
   }
 
   // 7. Learning + report.
@@ -140,9 +152,24 @@ export async function runHermes(opts: { cfg?: Config; dir?: string; dryRun?: boo
   budget.save();
   savePipeline(dir, p);
   const reportFile = path.join(dir, "reports", `${today}.md`);
-  writeText(reportFile, report(cfg, p, budget, log, errors, dry, today));
+  const reportText = report(cfg, p, budget, log, errors, dry, today);
+  writeText(reportFile, reportText);
+  tasks.hermes ??= "Daily run complete";
+  writeJson(
+    path.join(dir, "dashboard.json"),
+    buildDashboard({ cfg, p, budget, dir, memoryRoot: ctx.memoryRoot, log, errors, tasks, report: reportText, dry, now }),
+  );
   if (errors.length) process.exitCode = 1;
   return { reportFile, log: [...log, ...errors.map((e) => `ERROR: ${e}`)] };
+}
+
+/** Page 1 as a PNG: the dashboard preview and the Etsy listing photo. Skipped if poppler isn't installed. */
+function makeThumb(dir: string): void {
+  try {
+    execFileSync("pdftoppm", ["-png", "-f", "1", "-l", "1", "-singlefile", "-scale-to", "800", path.join(dir, "product.pdf"), path.join(dir, "thumb")]);
+  } catch {
+    // No thumbnail; the dashboard shows a placeholder.
+  }
 }
 
 function packageBatch(dir: string, p: Pipeline, batch: Batch): void {
@@ -151,7 +178,9 @@ function packageBatch(dir: string, p: Pipeline, batch: Batch): void {
     const src = path.join(dir, "products", id);
     if (!existsSync(src)) continue;
     mkdirSync(path.join(out, id), { recursive: true });
-    for (const f of ["product.pdf", "listing.json"]) copyFileSync(path.join(src, f), path.join(out, id, f));
+    for (const f of ["product.pdf", "listing.json", "thumb.png"]) {
+      if (existsSync(path.join(src, f))) copyFileSync(path.join(src, f), path.join(out, id, f));
+    }
   }
   const names = batch.productIds.map((id) => p.products.find((x) => x.id === id)?.title ?? id);
   writeText(path.join(out, "README.md"), `# Upload batch ${batch.id}\n\nFor each folder: create a digital listing on Etsy, upload product.pdf as the file, and copy the title, tags, description and price from listing.json.\n\n${names.map((n) => `- ${n}`).join("\n")}\n`);

@@ -1,5 +1,6 @@
 {
   "shopName": "PalmPop Studio",
+  "repo": "adblastmiami/adblast-site",
   "model": "claude-opus-5-5",
   "effort": "low",
   "strategyEffort": "medium",

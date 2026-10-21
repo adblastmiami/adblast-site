@@ -36,6 +36,8 @@ jobs:
           node-version: 24
           cache: npm
           cache-dependency-path: ai-ops/package-lock.json
+      - name: Install PDF thumbnail tool
+        run: command -v pdftoppm || (sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends poppler-utils)
       - run: npm ci
       - run: npm test
 

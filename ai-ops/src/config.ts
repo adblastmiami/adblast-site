@@ -11,6 +11,8 @@ export interface ModelPrice {
 
 export interface Config {
   shopName: string;
+  /** owner/name on GitHub, for links to approval issues. */
+  repo: string;
   model: string;
   effort: "low" | "medium" | "high" | "xhigh" | "max";
   strategyEffort: "low" | "medium" | "high" | "xhigh" | "max";
